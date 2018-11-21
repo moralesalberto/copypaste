@@ -14,7 +14,9 @@ var clipper = function() {
     data.clipboardData = clipboardData;
     // first try to get items from files,then from binary data
     // finally get them from text
-    getItemsFromFiles() || getItemsFromBinaryFile() || getItemsFromText();
+    getItemsFromFiles();
+    getItemsFromBinaryFile();
+    getItemsFromText();
     // return the list of items
     return data.items;
   };
@@ -23,9 +25,10 @@ var clipper = function() {
   // and add them to the items array
   var getItemsFromFiles = function() {
     var files = data.clipboardData.files;
+    console.log(files);
     if(files.length > 0) {
       for(var i=0; i < files.length; i++) {
-        data.items.push( {type: 'upload', file: files[i], content_type: files[i].type, size: files[i].size });
+        data.items.push( {type: 'upload', file: files[i], content_type: files[i].type, size: files[i].size, filename: files[i].name });
       }
       return true;
     }
@@ -45,9 +48,7 @@ var clipper = function() {
       blob = clipboardItems[i].getAsFile();
       if((blob != null) && (allowedContentType(clipboardItems[i].type))) {
         // we got a blob add it for the upload
-        data.items.push( { type: 'upload', file: blob, content_type : blob.type, size: blob.size } );
-        // get out of the iteration, we got our file
-        break;
+        data.items.push( { type: 'upload', file: blob, content_type : blob.type, size: blob.size, filename: blob.name } );
       }
     }
     // return true if we have a blob
@@ -55,7 +56,7 @@ var clipper = function() {
   };
 
   var allowedContentType = function(type) {
-    return type.indexOf("image") == 0;
+    return true;
   };
 
   var getItemsFromText = function() {
@@ -65,6 +66,9 @@ var clipper = function() {
     // is it a URL
     if(isURL(text)) {
       data.items.push({ type: 'link', url: text });
+    }
+    else {
+      data.items.push({ type: 'text', text: text });
     }
   };
 
@@ -80,7 +84,6 @@ window.addEventListener("paste", function(pasteEvent){
   // send the clipboardData
   var items = clipper.getItems(pasteEvent.clipboardData);
   // show what we got
-  console.log(items);
-  $("#log").html(JSON.stringify(items));
+  $("#log").html(JSON.stringify(items, null, 2));
 }, false);
 
